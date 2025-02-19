@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env
+.env.local
+
+# Logs & Debugging
+*.log
+logs/
+
+# Alembic migrations cache
+migrations/versions/*.pyc
+migrations/versions/*.pyo
+
+# RabbitMQ data
+rabbitmq-data/
