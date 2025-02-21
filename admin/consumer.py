@@ -85,7 +85,7 @@ def start_consumer():
             channel.queue_declare(queue="book_borrowed", durable=False)
 
             # Consume messages from both queues
-            channel.basic_consume(queue="user_created", on_message_callback=process_book_borrowed, auto_ack=True)
+            channel.basic_consume(queue="user_created", on_message_callback=process_user_created, auto_ack=True)
             channel.basic_consume(queue="book_borrowed", on_message_callback=process_book_borrowed, auto_ack=True)
             
 
