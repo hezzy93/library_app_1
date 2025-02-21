@@ -33,3 +33,22 @@ def send_book_deleted(book_id):
 
     print(f"📨 Sent book deleted message: {message}")
     connection.close()
+
+    
+def send_user_deleted(user_id):
+    """Send a message when a user is deleted."""
+    connection = get_rabbitmq_connection()
+    channel = connection.channel()
+
+    # Declare queue for user deleted event
+    channel.queue_declare(queue="user_deleted")
+
+    # Create delete message
+    message = {"user_id": user_id}
+
+    channel.basic_publish(exchange="", routing_key="user_deleted", body=json.dumps(message))
+
+    print(f"📨 Sent user deleted message: {message}")
+    connection.close()
+
+    

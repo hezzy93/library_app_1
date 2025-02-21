@@ -2,7 +2,7 @@ import pika
 import json
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import Book
+from models import Book, User
 from messaging.config import get_rabbitmq_connection
 
 def book_created_callback(ch, method, properties, body):
@@ -54,6 +54,39 @@ def process_book_deleted(ch, method, properties, body):
         print(f"❌ Error processing book delete message: {e}")
 
 
+
+
+
+
+
+def process_user_deleted(ch, method, properties, body):
+    """Process messages from RabbitMQ for user deletion."""
+    try:
+        data = json.loads(body)
+
+        if "user_id" not in data:
+            print(f"⚠️ Invalid book delete message format: {data}")
+            return
+
+        user_id = data["user_id"]
+
+        db: Session = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            if db_user:
+                db.delete(db_user)  # ✅ Delete user from database
+                db.commit()
+                print(f"🗑️ Admin API:User {user_id} deleted from PostgreSQL")
+            else:
+                print(f"⚠️ Admin API: User {user_id} not found in database")
+        finally:
+            db.close()
+
+    except Exception as e:
+        print(f"❌ Error processing book delete message: {e}")
+
+
+
    # Setup RabbitMQ Consumer
 connection = get_rabbitmq_connection()
 channel = connection.channel()
@@ -61,10 +94,12 @@ channel = connection.channel()
 # Declare queues
 channel.queue_declare(queue="book_created")
 channel.queue_declare(queue="book_deleted", durable=False)
-
+channel.queue_declare(queue="user_deleted", durable=False)
 # Bind consumers to queues
 channel.basic_consume(queue="book_created", on_message_callback=book_created_callback, auto_ack=True)
 channel.basic_consume(queue="book_deleted", on_message_callback=process_book_deleted, auto_ack=True)  # ✅ Listen for delete messages
+channel.basic_consume(queue="user_deleted", on_message_callback=process_user_deleted, auto_ack=True)
+
 
 print("🎧 User API is listening for book updates...")
 channel.start_consuming()

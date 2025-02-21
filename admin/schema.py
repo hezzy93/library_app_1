@@ -11,8 +11,7 @@ class UserCreate(UserBase):
     pass
 
 
-class User(UserBase):
-    id: int
+
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,6 +29,9 @@ class Book(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class Book1(Book):
+    id:int
+    user: Optional[UserBase] = None
 
 # Schema for creating new books
 class BookCreate(BaseModel):
@@ -40,3 +42,6 @@ class BookCreate(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class User(UserBase):
+    id: int
+    books: List[Book] = [] 

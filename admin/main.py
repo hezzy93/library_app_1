@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base, get_db
 import schema, crud
 from typing import List
-from producer import send_book_created, send_book_deleted
+from producer import send_book_created, send_book_deleted, send_user_deleted
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -38,6 +38,19 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
     
     return result
 
+# Endpoint to DELETE a user by Id
+@app.delete("/users/{user_id}/delete", response_model=dict, tags=["User"])
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    result = crud.delete_user(db, user_id)
+    
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    
+    # Send RabbitMQ message **only if the book was deleted successfully**
+    send_user_deleted(user_id)
+    
+    return result
+
 # Endpoint to GET all users
 @app.get("/users/", response_model=List[schema.User], tags=["User"])
 def get_users(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
@@ -45,7 +58,7 @@ def get_users(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return users
 
 # Endpoint to GET all books
-@app.get("/books/", response_model=List[schema.Book], tags=["Book"])
+@app.get("/books/", response_model=List[schema.Book1], tags=["Book"])
 def get_books(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     books = crud.get_books(db, offset=offset, limit=limit)
     return books
