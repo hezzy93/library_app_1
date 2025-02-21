@@ -40,3 +40,9 @@ def borrow_book(db: Session, book_borrow: schema.BookBorrow, user_id: int):
     db.refresh(db_book)
 
     return db_book
+
+
+#Get all books
+def get_books(db: Session, offset: int = 0, limit: int = 10):
+    return db.query(models.Book).offset(offset).limit(limit).all()
+

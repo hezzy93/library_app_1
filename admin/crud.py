@@ -27,3 +27,12 @@ def delete_book(db: Session, book_id: int):
     
     print(f" [x] Deleted book with ID {book_id} from the frontend database")
     return {"message": f"Book {book_id} deleted successfully"}
+
+#Get all users
+def get_users(db: Session, offset: int = 0, limit: int = 10):
+    return db.query(models.User).offset(offset).limit(limit).all()
+
+#Get all books
+def get_books(db: Session, offset: int = 0, limit: int = 10):
+    return db.query(models.Book).offset(offset).limit(limit).all()
+

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base, get_db
 import schema, crud
+from typing import List
 from producer import send_book_created, send_book_deleted
 
 # Create database tables
@@ -11,7 +12,7 @@ app = FastAPI()
 
 
 
-@app.post("/books/", tags=["Admin"])
+@app.post("/books/", tags=["Book"])
 def create_book(book: schema.BookCreate, db: Session = Depends(get_db)):
     added_book = crud.add_book(db=db, book=book)
 
@@ -25,7 +26,7 @@ def create_book(book: schema.BookCreate, db: Session = Depends(get_db)):
 
 
 # Endpoint to DELETE a book by Id
-@app.delete("/books/{book_id}/delete", response_model=dict, tags=["Admin"])
+@app.delete("/books/{book_id}/delete", response_model=dict, tags=["Book"])
 def delete_book(book_id: int, db: Session = Depends(get_db)):
     result = crud.delete_book(db, book_id)
     
@@ -36,6 +37,18 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
     send_book_deleted(book_id)
     
     return result
+
+# Endpoint to GET all users
+@app.get("/users/", response_model=List[schema.User], tags=["User"])
+def get_users(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    users = crud.get_users(db, offset=offset, limit=limit)
+    return users
+
+# Endpoint to GET all books
+@app.get("/books/", response_model=List[schema.Book], tags=["Book"])
+def get_books(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    books = crud.get_books(db, offset=offset, limit=limit)
+    return books
 
 @app.get("/")
 def read_root():

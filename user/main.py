@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base, get_db
 import schema, crud
+from typing import List
 
 from producer import send_user_created_message, send_book_borrowed
 # Create database tables
@@ -11,7 +12,7 @@ app = FastAPI()
 
 
 # Endpoint to Enroll new user
-@app.post("/Enroll_User/", tags=["USER API"])
+@app.post("/Enroll_User/", tags=["USER"])
 def enroll(user: schema.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
@@ -26,7 +27,7 @@ def enroll(user: schema.UserCreate, db: Session = Depends(get_db)):
     return {"message": "Account created successfully","user": created_user}
 
 # Endpoint to borrow a book
-@app.post("/books/borrow", response_model=schema.BorrowedBookResponse, tags=["Books"])
+@app.post("/books/borrow", response_model=schema.BorrowedBookResponse, tags=["Book"])
 def borrow_book(email: str, book_borrow: schema.BookBorrow, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=email)
     if not db_user:
@@ -46,6 +47,11 @@ def borrow_book(email: str, book_borrow: schema.BookBorrow, db: Session = Depend
     )
 
 
+# Endpoint to GET all books
+@app.get("/books/", response_model=List[schema.Book], tags=["Book"])
+def get_books(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    books = crud.get_books(db, offset=offset, limit=limit)
+    return books
 
 
 
