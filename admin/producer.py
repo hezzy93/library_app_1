@@ -52,3 +52,17 @@ def send_user_deleted(user_id):
     connection.close()
 
     
+def send_book_updated(book_id, title, publisher, category, available):
+    """Send a message when a new book is created."""
+    connection = get_rabbitmq_connection()
+    channel = connection.channel()
+    
+    # Declare queue for book messages
+    channel.queue_declare(queue="book_updated")
+
+    # Create message data
+    message = {"book_id": book_id, "title": title, "publisher": publisher, "category": category, "available": available}
+    channel.basic_publish(exchange="", routing_key="book_updated", body=json.dumps(message))
+
+    print(f"📨 Sent book_updated message: {message}")
+    connection.close()

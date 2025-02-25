@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 import schema, models
 from sqlalchemy.orm import joinedload
 
+
+# Function to ADD book
 def add_book(db: Session, book: schema.BookCreate):
     # Create and add the book
     db_book = models.Book(
@@ -15,7 +17,7 @@ def add_book(db: Session, book: schema.BookCreate):
     db.refresh(db_book)
     return db_book
 
-
+# Funtion to DELETE book
 def delete_book(db: Session, book_id: int):
     db_book = db.query(models.Book).filter(models.Book.id == book_id).first()
 
@@ -42,6 +44,8 @@ def get_books(db: Session, offset: int = 0, limit: int = 10):
         .limit(limit)
         .all()
     )
+
+# Function to DELETE User
 def delete_user(db: Session, user_id: int):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
 
@@ -54,3 +58,28 @@ def delete_user(db: Session, user_id: int):
     
     print(f" [x] Deleted book with ID {user_id} from the frontend database")
     return {"message": f"Book {user_id} deleted successfully"}
+
+
+#Function to Update Book
+def update_book(db:Session, book_id: int, book_update: schema.BookUpdate):
+    db_book =db.query(models.Book).filter(models.Book.id == book_id).first()
+    if not db_book:
+        return None
+    
+    for key, value in book_update.dict(exclude_unset=True).items():
+            setattr(db_book, key, value)
+            
+    db.commit()
+    db.refresh(db_book)
+    return db_book
+
+# Function to UPDATE book Availabilty
+def update_book_availability(db: Session, book_id: int, available: bool):
+    db_book = db.query(models.Book).filter(models.Book.id == book_id).first()
+    if not db_book:
+        return None
+
+    db_book.available = available
+    db.commit()
+    db.refresh(db_book)
+    return db_book

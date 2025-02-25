@@ -44,4 +44,13 @@ class BookCreate(BaseModel):
 
 class User(UserBase):
     id: int
-    books: List[Book] = [] 
+    books: List[Book] = []
+
+class BookUpdate(BaseModel):
+    title: Optional[str] = None
+    publisher: Optional[str] = None
+    category: Optional[str] = None
+    # available: Optional[bool] = None
+
+class BookAvailabilityUpdate(BaseModel):
+    available: bool

@@ -114,6 +114,9 @@ def process_book_returned(ch, method, properties, body):
         print(f"❌ Unexpected error processing book return message: {e}")
 
 
+
+
+
 def start_consumer():
     """Start RabbitMQ consumer with automatic reconnection."""
     while True:
@@ -125,12 +128,15 @@ def start_consumer():
             channel.queue_declare(queue="user_created", durable=False)
             channel.queue_declare(queue="book_borrowed", durable=False)
             channel.queue_declare(queue="book_returned", durable=False)
+            
+
+
 
             # Consume messages from both queues
             channel.basic_consume(queue="user_created", on_message_callback=process_user_created, auto_ack=True)
             channel.basic_consume(queue="book_borrowed", on_message_callback=process_book_borrowed, auto_ack=True)
             channel.basic_consume(queue="book_returned", on_message_callback=process_book_returned, auto_ack=True)
-
+            
             print("🎧 Admin API is listening for user creation events...")
             channel.start_consuming()
 

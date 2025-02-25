@@ -1,0 +1,32 @@
+Here’s a summary of the functionality, structure, and requirements of your library-app project that you outlined on September 24, 2024:
+
+Functionality:
+Frontend API:
+
+User enrollment: A feature allowing users to sign up or register.
+Listing available books: Provides users with a list of books that are currently available in the library.
+Get a single book by its ID: Allows users to fetch detailed information about a specific book using its unique identifier.
+Filter books: Users can filter books by publisher and category to narrow down search results.
+Borrow books: Users can borrow books for a specified duration, with the availability of books being checked in the process.
+Backend/Admin API:
+
+Book catalogue management: Administrators can add, update, or remove books from the library catalogue.
+User information management: Admins can manage user data related to book borrowing and user enrollment.
+Communicate changes: Changes in the book catalogue (such as availability) will be communicated to the frontend via messaging.
+Structure:
+Two services:
+
+Frontend API: For user-facing interactions (e.g., browsing and borrowing books).
+Backend/Admin API: For admin functionalities like managing the book catalogue and user information.
+Database:
+
+Frontend API: Using PostgreSQL.
+Backend API: Using MySQL.
+Communication between services: The frontend and backend will communicate changes such as book availability using a message broker (eventually, you decided to use RabbitMQ for this purpose).
+
+Requirements:
+Separate APIs: The project involves building two separate APIs, one for frontend users and another for backend/admin users.
+Different data stores: You are using PostgreSQL for the frontend API and MySQL for the backend/admin API.
+Messaging system: You decided to use RabbitMQ for messaging between the frontend and backend APIs to communicate changes like book availability.
+Deployment with Docker: The application should be deployed using Docker containers for easy management of dependencies and services.
+Unit/Integration tests: The project should include both unit and integration tests to ensure the robustness of the APIs and interactions between services.

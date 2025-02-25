@@ -87,6 +87,43 @@ def process_user_deleted(ch, method, properties, body):
 
 
 
+def process_book_updated(ch, method, properties, body):
+    """Process messages from RabbitMQ for book borrowing."""
+    try:
+        data = json.loads(body)
+
+        if not all(k in data for k in ["book_id", "title", "publisher", "category","available"]):
+            print(f"⚠️ Invalid user message format: {data}")
+            return
+
+        book_id = data["book_id"]
+        title = data["title"]
+        publisher = data["publisher"]
+        category = data["category"]
+        available = data["available"]
+
+
+        db: Session = SessionLocal()
+        try:
+            db_book = db.query(Book).filter(Book.id == book_id).first()
+            if db_book:
+                # ✅ Update the existing book record
+                db_book.title = title
+                db_book.publisher = publisher
+                db_book.category = category
+                db_book.available = available
+
+                db.commit()
+                print(f"✅ Admin API: Book {book_id} marked as updated in PostgreSQL")
+            else:
+                print(f"⚠️ Admin API: Book {book_id} not found in database")
+        finally:
+            db.close()
+
+    except Exception as e:
+        print(f"❌ Error processing book borrow message: {e}")
+
+
    # Setup RabbitMQ Consumer
 connection = get_rabbitmq_connection()
 channel = connection.channel()
@@ -95,10 +132,14 @@ channel = connection.channel()
 channel.queue_declare(queue="book_created")
 channel.queue_declare(queue="book_deleted", durable=False)
 channel.queue_declare(queue="user_deleted", durable=False)
+
+channel.queue_declare(queue="book_updated", durable=False)
 # Bind consumers to queues
 channel.basic_consume(queue="book_created", on_message_callback=book_created_callback, auto_ack=True)
 channel.basic_consume(queue="book_deleted", on_message_callback=process_book_deleted, auto_ack=True)  # ✅ Listen for delete messages
 channel.basic_consume(queue="user_deleted", on_message_callback=process_user_deleted, auto_ack=True)
+
+channel.basic_consume(queue="book_updated", on_message_callback=process_book_updated, auto_ack=True)
 
 
 print("🎧 User API is listening for book updates...")
