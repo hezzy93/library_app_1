@@ -22,6 +22,7 @@ def send_user_created_message(user_id, lastname, firstname, email):
     channel.basic_publish(exchange="", routing_key="user_created", body=json.dumps(message))
 
     print(f"📨 Sent user_created message: {message}")
+    channel.close()
     connection.close()
 
 
@@ -45,4 +46,29 @@ def send_book_borrowed(book_id, available, borrower_id, borrow_date, return_date
     channel.basic_publish(exchange="", routing_key="book_borrowed", body=json.dumps(message, default=str))
 
     print(f"📨 Sent borrowed book message: {message}")
+    channel.close()
+    connection.close()
+
+
+def return_book_borrowed(book_id, available, borrower_id, borrow_date, return_date):
+    """Send a message when a book is returned."""
+    connection = get_rabbitmq_connection()
+    channel = connection.channel()
+
+    # Declare queue for book return event
+    channel.queue_declare(queue="book_returned")
+
+    # Create message data
+    message = {
+        "book_id": book_id,
+        "available": available,
+        "borrower_id": borrower_id,
+        "borrow_date": borrow_date,
+        "return_date": return_date
+    }
+    
+    channel.basic_publish(exchange="", routing_key="book_returned", body=json.dumps(message, default=str))
+
+    print(f"📨 Sent returned book message: {message}")
+    channel.close()
     connection.close()

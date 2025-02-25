@@ -49,3 +49,6 @@ class BorrowedBookResponse(BaseModel):
     available: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+class ReturnRequest(BaseModel):
+    book_id: int

@@ -46,3 +46,18 @@ def borrow_book(db: Session, book_borrow: schema.BookBorrow, user_id: int):
 def get_books(db: Session, offset: int = 0, limit: int = 10):
     return db.query(models.Book).offset(offset).limit(limit).all()
 
+# Function to return borrowed books
+def return_book(db: Session, book_id: int):
+    """Marks a book as returned and updates availability."""
+    book = db.query(models.Book).filter(models.Book.id == book_id, models.Book.available == False).first()
+    if not book:
+        return None
+
+    book.available = True
+    book.borrower_id = None
+    book.borrow_date = None
+    book.return_date = None
+
+    db.commit()
+    db.refresh(book)
+    return book
