@@ -50,14 +50,14 @@ def delete_user(db: Session, user_id: int):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if not db_user:
-        print(f" [!] Book with ID {user_id} not found in the frontend database")
-        return {"error": "Book not found"}
+        print(f" [!] User with ID {user_id} not found in the frontend database")
+        return {"error": "User not found"}
     
     db.delete(db_user)
     db.commit()
     
-    print(f" [x] Deleted book with ID {user_id} from the frontend database")
-    return {"message": f"Book {user_id} deleted successfully"}
+    print(f" [x] Deleted user with ID {user_id} from the frontend database")
+    return {"message": f"User {user_id} deleted successfully"}
 
 
 #Function to Update Book
@@ -66,7 +66,7 @@ def update_book(db:Session, book_id: int, book_update: schema.BookUpdate):
     if not db_book:
         return None
     
-    for key, value in book_update.dict(exclude_unset=True).items():
+    for key, value in book_update.model_dump(exclude_unset=True).items():
             setattr(db_book, key, value)
             
     db.commit()
@@ -83,3 +83,26 @@ def update_book_availability(db: Session, book_id: int, available: bool):
     db.commit()
     db.refresh(db_book)
     return db_book
+
+
+# GET USER BY id
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id ==user_id).first()
+
+# GET BOOK BY title
+def get_book_by_title(db: Session, title: str):
+    return db.query(models.Book).filter(models.Book.title.ilike(f"%{title}%")).all()
+
+# GET BOOKS BY CATEGORY
+def get_books_by_category(db: Session, category: str):
+    return db.query(models.Book).filter(models.Book.category.ilike(f"%{category}%")).all()
+
+
+
+# GET BOOK BY publisher
+def get_books_by_publisher(db: Session, publisher: str):
+    return db.query(models.Book).filter(models.Book.publisher.ilike(f"%{publisher}%")).all()
+
+# GET Book BY id
+def get_book_by_id(db: Session, book_id: int):
+    return db.query(models.Book).filter(models.Book.id ==book_id).first()

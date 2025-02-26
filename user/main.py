@@ -65,6 +65,44 @@ def return_book(request: schema.ReturnRequest, db: Session = Depends(get_db)):
 
     return {"message": f"Book {book.id} returned successfully"}
 
+# Endpoint to GET Book by id
+@app.get("/books/{book_id}/", response_model=schema.Book, tags=["Book"])
+
+def get_Book_by_id(book_id: int, db: Session = Depends(get_db)):
+   print(f"Fetching book with ID: {book_id}")  # Debugging line
+   book= crud.get_book_by_id(db=db, book_id=book_id) 
+   if book is None:
+       raise HTTPException(status_code=404, detail="Book not found")
+   return book
+
+# Endpoint to GET Book by title
+@app.get("/books/title/{title}/", response_model=List[schema.Book], tags=["Book"] )
+def get_book_by_title(title: str, db:Session = Depends(get_db)):
+    print(f"checking")
+    books=crud.get_book_by_title(db=db, title=title)
+    if not books:
+        raise HTTPException(status_code=404, detail="Book not found")
+    # Convert each SQLAlchemy model instance to a Pydantic schema
+    return [schema.Book.model_validate(book) for book in books]
+
+# Endpoint to GET Books by category
+@app.get("/books/category/{category}/", response_model=List[schema.Book], tags=["Book"])
+def get_books_by_category(category: str, db: Session = Depends(get_db)):
+    books = crud.get_books_by_category(db=db, category=category)
+    if not books:
+        raise HTTPException(status_code=404, detail="No books found in this category")
+    return books
+
+# Endpoint to GET Books by publisher
+@app.get("/books/publisher/{publisher}/", response_model=List[schema.Book], tags=["Book"])
+def get_books_by_publisher(publisher: str, db: Session = Depends(get_db)):
+    books = crud.get_books_by_publisher(db=db, publisher=publisher)
+    if not books:
+        raise HTTPException(status_code=404, detail="No books found for this publisher")
+    return books
+
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "Welcome to the User end of the Library API"}

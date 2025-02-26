@@ -61,3 +61,25 @@ def return_book(db: Session, book_id: int):
     db.commit()
     db.refresh(book)
     return book
+
+
+
+
+# GET BOOK BY title
+def get_book_by_title(db: Session, title: str):
+    return db.query(models.Book).filter(models.Book.title.ilike(f"%{title}%")).all()
+
+# GET BOOKS BY CATEGORY
+def get_books_by_category(db: Session, category: str):
+    return db.query(models.Book).filter(models.Book.category.ilike(f"%{category}%")).all()
+
+
+
+# GET BOOK BY publisher
+def get_books_by_publisher(db: Session, publisher: str):
+    return db.query(models.Book).filter(models.Book.publisher.ilike(f"%{publisher}%")).all()
+
+
+# GET Book BY id
+def get_book_by_id(db: Session, book_id: int):
+    return db.query(models.Book).filter(models.Book.id ==book_id).first()
