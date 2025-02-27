@@ -45,6 +45,17 @@ def get_books(db: Session, offset: int = 0, limit: int = 10):
         .all()
     )
 
+# Get Borrowed Books
+    
+def get_borrowed_books(db: Session, offset: int = 0, limit: int = 10):
+    books = db.query(models.Book).filter(models.Book.available == False).offset(offset).limit(limit).all()
+    
+    if not books:
+        return []
+    
+    return books
+
+
 # Function to DELETE User
 def delete_user(db: Session, user_id: int):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()

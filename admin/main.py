@@ -12,7 +12,7 @@ app = FastAPI()
 
 
 # Endpoint to CREATE book
-@app.post("/books/", tags=["Book"])
+@app.post("/books/", tags=["Admin"])
 def create_book(book: schema.BookCreate, db: Session = Depends(get_db)):
     added_book = crud.add_book(db=db, book=book)
 
@@ -26,7 +26,7 @@ def create_book(book: schema.BookCreate, db: Session = Depends(get_db)):
 
 
 # Endpoint to DELETE a book by Id
-@app.delete("/books/{book_id}/delete", response_model=dict, tags=["Book"])
+@app.delete("/books/{book_id}/delete", response_model=dict, tags=["Admin"])
 def delete_book(book_id: int, db: Session = Depends(get_db)):
     result = crud.delete_book(db, book_id)
     
@@ -39,7 +39,7 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
     return result
 
 # Endpoint to DELETE a user by Id
-@app.delete("/users/{user_id}/delete", response_model=dict, tags=["User"])
+@app.delete("/users/{user_id}/delete", response_model=dict, tags=["Admin"])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     result = crud.delete_user(db, user_id)
     
@@ -52,19 +52,19 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return result
 
 # Endpoint to GET all users
-@app.get("/users/", response_model=List[schema.User], tags=["User"])
+@app.get("/users/", response_model=List[schema.User], tags=["Admin"])
 def get_users(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     users = crud.get_users(db, offset=offset, limit=limit)
     return users
 
 # Endpoint to GET all books
-@app.get("/books/", response_model=List[schema.Book1], tags=["Book"])
+@app.get("/books/", response_model=List[schema.Book1], tags=["Admin"])
 def get_books(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     books = crud.get_books(db, offset=offset, limit=limit)
     return books
 
 # Endpoint to UPDATE books
-@app.put("/books/{book_id}", tags=["Book"])
+@app.put("/books/{book_id}", tags=["Admin"])
 def update_book(book_id: int, payload: schema.BookUpdate, db: Session = Depends(get_db)):
     updated_book =crud.update_book(
         db=db,
@@ -80,7 +80,7 @@ def update_book(book_id: int, payload: schema.BookUpdate, db: Session = Depends(
     return {'message': 'success', 'data':updated_book}
 
 # Endpoint to UPDATE Book Availability
-@app.patch("/books/{book_id}/availability", tags=["Book"])
+@app.patch("/books/{book_id}/availability", tags=["Admin"])
 def update_book_availability(
     book_id: int,
     payload: schema.BookAvailabilityUpdate,
@@ -102,7 +102,7 @@ def update_book_availability(
     return {"message": "Availability updated", "data": updated_book}
 
 # Endpoint to GET User by id
-@app.get("/users/{user_id}/", response_model=schema.User, tags=["User"])
+@app.get("/users/{user_id}/get/", response_model=schema.User, tags=["Admin"])
 def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
    user= crud.get_user_by_id(db=db, user_id=user_id) 
    if user is None:
@@ -110,7 +110,7 @@ def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
    return user   
 
 # Endpoint to GET Book by title
-@app.get("/books/title/{title}/", response_model=List[schema.Book], tags=["Book"] )
+@app.get("/books/title/{title}/", response_model=List[schema.Book], tags=["Admin"] )
 def get_book_by_title(title: str, db:Session = Depends(get_db)):
     books=crud.get_book_by_title(db=db, title=title)
     if not books:
@@ -119,7 +119,7 @@ def get_book_by_title(title: str, db:Session = Depends(get_db)):
     return [schema.Book.model_validate(book) for book in books]
 
 # Endpoint to GET Books by category
-@app.get("/books/category/{category}/", response_model=List[schema.Book], tags=["Book"])
+@app.get("/books/category/{category}/", response_model=List[schema.Book], tags=["Admin"])
 def get_books_by_category(category: str, db: Session = Depends(get_db)):
     books = crud.get_books_by_category(db=db, category=category)
     if not books:
@@ -127,7 +127,7 @@ def get_books_by_category(category: str, db: Session = Depends(get_db)):
     return books
 
 # Endpoint to GET Books by publisher
-@app.get("/books/publisher/{publisher}/", response_model=List[schema.Book], tags=["Book"])
+@app.get("/books/publisher/{publisher}/", response_model=List[schema.Book], tags=["Admin"])
 def get_books_by_publisher(publisher: str, db: Session = Depends(get_db)):
     print(f"checking")
     books = crud.get_books_by_publisher(db=db, publisher=publisher)
@@ -136,12 +136,21 @@ def get_books_by_publisher(publisher: str, db: Session = Depends(get_db)):
     return books
 
 # Endpoint to GET Book by id
-@app.get("/books/{book_id}/", response_model=schema.Book, tags=["Book"])
+@app.get("/books/{book_id}/", response_model=schema.Book, tags=["Admin"])
 def get_Book_by_id(book_id: int, db: Session = Depends(get_db)):
    book= crud.get_book_by_id(db=db, book_id=book_id) 
    if book is None:
        raise HTTPException(status_code=404, detail="Book not found")
    return book
+
+
+# Endpoint to Get borrowed books
+@app.get("/borrowed/books/", response_model=List[schema.Book1], tags=["Admin"])
+def get_borrowed_books(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    books = crud.get_borrowed_books(db, offset=offset, limit=limit)
+    return books
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "Welcome to the Admin end of the Library API"}
