@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base, get_db
 import schema, crud, models
 from typing import List
-from schema import Token, TokenData
-from crud import create_access_token, verify_password, verify_token, authenticate_user,settings
+from schema import TokenData
+from auth import create_access_token, verify_password,settings
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
