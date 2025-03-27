@@ -111,16 +111,28 @@ def get_books(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return books
 
 @app.post("/return_book/", tags=["Book"])
-def return_book(request: schema.ReturnRequest, db: Session = Depends(get_db)):
-    """Return a borrowed book."""
-    book = crud.return_book(db, request.book_id)
-    if not book:
-        raise HTTPException(status_code=400, detail="Book not found or not borrowed")
+def return_book(
+    request: schema.ReturnRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Return a borrowed book if the user is the borrower."""
+    book, error = crud.return_book(db, request.book_id, current_user.id)
+
+    if error == "Book not found":
+        raise HTTPException(status_code=404, detail=error)
+
+    if error == "Book is already available":
+        raise HTTPException(status_code=400, detail=error)
+
+    if error == "You are not the borrower of this book":
+        raise HTTPException(status_code=403, detail=error)
 
     # Publish book returned event to RabbitMQ
     return_book_borrowed(book.id, book.available, book.borrower_id, book.borrow_date, book.return_date)
 
     return {"message": f"Book {book.id} returned successfully"}
+
 
 # Endpoint to GET Book by id
 @app.get("/books/{book_id}/", response_model=schema.Book, tags=["Book"])
