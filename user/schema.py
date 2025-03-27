@@ -9,9 +9,18 @@ class UserBase(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    message: str
+
+class TokenData(BaseModel):
+    sub: str
+    id: int
+    
 class UserCreate(UserBase):
     pass
-
+    password: str
 
 class User(UserBase):
     id: int

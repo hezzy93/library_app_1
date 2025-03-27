@@ -9,6 +9,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     lastname = Column(String(255), index=True, nullable=False)
     firstname = Column(String(255), index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
 
     # Relationship with books (No cascade delete)
     books = relationship("Book", back_populates="user")

@@ -1,15 +1,65 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base, get_db
-import schema, crud
+import schema, crud, models
 from typing import List
+from schema import Token, TokenData
+from crud import create_access_token, verify_password, verify_token, authenticate_user,settings
+from jose import jwt, JWTError
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from producer import send_user_created_message, send_book_borrowed, return_book_borrowed
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users_Login")
 
+@app.post("/users_Login")
+def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    print(f"Logging in User: {user.email}, ID: {user.id}")  # Debugging
+
+    if not verify_password(user_credentials.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if user.id is None:
+        raise ValueError("User ID is missing from database!")  # Ensure user ID exists
+
+    access_token = create_access_token(data={"sub": user.email, "id": user.id})  
+    print(f"Generated Token: {access_token}")  # Debugging
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+# Dependency to get current user
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(status_code=401, detail="Could not validate credentials")
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        user_id: int = payload.get("id")
+
+        if email is None or user_id is None:
+            raise credentials_exception
+
+        print(f"Decoded Token: {payload}")  # Debugging
+        token_data = TokenData(sub=email, id=user_id)
+
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(models.User).filter(models.User.id == token_data.id).first()
+
+    if user is None:
+        raise credentials_exception
+
+    return user
 
 # Endpoint to Enroll new user
 @app.post("/Enroll_User/", tags=["USER"])
@@ -28,23 +78,30 @@ def enroll(user: schema.UserCreate, db: Session = Depends(get_db)):
 
 # Endpoint to borrow a book
 @app.post("/books/borrow", response_model=schema.BorrowedBookResponse, tags=["Book"])
-def borrow_book(email: str, book_borrow: schema.BookBorrow, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db, email=email)
-    if not db_user:
-        raise HTTPException(status_code=400, detail="Email not registered")
-
-    borrowed_book = crud.borrow_book(db=db, book_borrow=book_borrow, user_id=db_user.id)
+def borrow_book(
+    book_borrow: schema.BookBorrow, 
+    db: Session = Depends(get_db), 
+    current_user: TokenData = Depends(get_current_user),  # Ensure we get user ID
+):
+    borrowed_book = crud.borrow_book(db=db, book_borrow=book_borrow, user_id=current_user.id)
 
     # Publish borrow book event to RabbitMQ
-    send_book_borrowed(borrowed_book.id, borrowed_book.available, borrowed_book.borrower_id, borrowed_book.borrow_date, borrowed_book.return_date)
+    send_book_borrowed(
+        borrowed_book.id, 
+        borrowed_book.available, 
+        borrowed_book.borrower_id, 
+        borrowed_book.borrow_date, 
+        borrowed_book.return_date
+    )
     
     return schema.BorrowedBookResponse(
         book_title=borrowed_book.title,
         borrow_date=borrowed_book.borrow_date,
         return_date=borrowed_book.return_date,
-        user_email=db_user.email,
+        user_email=current_user.email,  # Use authenticated user email
         available=borrowed_book.available
     )
+
 
 
 # Endpoint to GET all books
